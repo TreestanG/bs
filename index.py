@@ -8,7 +8,7 @@ pygame.init()
 window_width = 800
 window_height = 600
 window = pygame.display.set_mode((window_width, window_height))
-pygame.display.set_caption("Tetris")
+pygame.display.set_caption("Tetris - lol")
 
 BLACK = (0, 0, 0)
 CYAN = (0, 255, 255)
@@ -80,18 +80,30 @@ shapes = {
 
 
 class TetrisBlock:
-    def __init__(self, x, y, shape):
+    def __init__(self, x, y, shape, block = None):
         self.x = x
         self.y = y
         self.shape = shape
         self.color = shape_colors[shape]
         self.rotation = 0
+        self.block = block
 
-    def rotate(self):
-        self.rotation = (self.rotation + 1) % len(shapes[self.shape])
+    def rotate_cw(self):
+        self.block = pygame.transform.rotate(self.block, 90)
+    
+    def rotate_ccw(self):
+        self.block = pygame.transform.rotate(self.block, -90)
 
     def move_down(self):
-        self.y += 1
+        if self.check_collision():
+            self.y += 1
+
+    def check_collision(self):
+        if self.y >= 20:
+            return True
+        elif self.x < 0 or self.x > 9:
+            return True
+        return False
 
     def move_left(self):
         self.x -= 1
@@ -99,13 +111,10 @@ class TetrisBlock:
     def move_right(self):
         self.x += 1
 
-    def update_board(self, scheduler):
-        scheduler.enter(1.25, 1, self.update_board, (scheduler,))
-        self.move_down()
-
-        my_scheduler = sched.scheduler(time.time, time.sleep)
-        my_scheduler.enter(1.25, 1, self.update_board, (my_scheduler,))
-        my_scheduler.run()
+    def update_board(self):
+        block_scheduler = sched.scheduler(time.time, time.sleep)
+        block_scheduler.enter(1.25, 1, self.move_down, (block_scheduler,))
+        block_scheduler.run()
 
 
 class Tetris:
@@ -114,32 +123,27 @@ class Tetris:
         self.board_height = 20
         self.block_shape = 30
         self.shape_size = 4
-        self.board = [[0 for x in range(self.board_width)]
-                      for y in range(self.board_height)]
+        self.board = [[0 for x in range(self.board_width)] for y in range(self.board_height)]
         self.current_block = TetrisBlock(5, 1, self.shape())
 
     def draw_block(self, x, y, color):
         pygame.draw.rect(window, color, (x, y, block_size, block_size))
-        pygame.draw.rect(window, (41, 44, 53),
-                         (x, y, block_size, block_size), 1)
+        pygame.draw.rect(window, (41, 44, 53), (x, y, block_size, block_size), 1)
         return
 
     def draw_shape(self, x, y, shape, color):
         for row in range(shape_size):
             for col in range(shape_size):
                 if shape[row][col]:
-                    self.draw_block(x + col * block_size, y +
-                                    row * block_size, color)
+                    self.draw_block(x + col * block_size, y + row * block_size, color)
 
     def draw_board(self):
         window.fill(BLACK)
         windowDimensions = {"x": block_size*10, "y": block_size*20}
-        pygame.draw.rect(window, (41, 44, 53), (250, 0,
-                         windowDimensions["x"], windowDimensions["y"]))
+        pygame.draw.rect(window, (41, 44, 53), (250, 0, windowDimensions["x"], windowDimensions["y"]))
 
         for i in range(250, 550, block_size):
-            pygame.draw.line(window, (75, 75, 75), (i, 0),
-                             (i, windowDimensions["y"]), 1)
+            pygame.draw.line(window, (75, 75, 75), (i, 0), (i, windowDimensions["y"]), 1)
         for y in range(0, 600, block_size):
             pygame.draw.line(window, (75, 75, 75), (250, y), (550, y), 1)
 
@@ -150,6 +154,9 @@ class Tetris:
             return (number)*block_size
 
     def shape(self):
+        tetris_block = self.generate_block()
+        self.current_block = tetris_block
+
         return random.choice(list(shapes.keys()))
 
     def generate_block(self):
@@ -157,26 +164,43 @@ class Tetris:
         y = 0
         shape = self.shape()
         return TetrisBlock(x, y, shape)
+    
+    def handle_input(self):
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                return True
+            elif event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    self.current_block.move_left()
+                elif event.key == K_RIGHT:
+                    self.current_block.move_right()
+                elif event.key == K_UP:
+                    self.current_block.rotate_cw()
+                elif event.key == K_DOWN:
+                    self.current_block.rotate_ccw()
+
 
     def run(self):
         running = True
-        self.current_block = self.generate_block()
 
         while running:
+            self.handle_input()
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
 
             self.draw_board()
-            self.draw_shape(
+            self.current_block.block = self.draw_shape(
                 self.tetris_coords("x", self.current_block.x),
                 self.tetris_coords("y", self.current_block.y),
                 shapes[self.current_block.shape],
                 self.current_block.color
             )
 
-            pygame.display.update()
+            time.sleep(1.25)
+            self.current_block.move_down()
 
+            pygame.display.update()
         pygame.quit()
 
 
