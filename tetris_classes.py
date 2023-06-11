@@ -16,6 +16,7 @@ class TetrisBlock:
         self.rotation = 0
         self.code = shapes[shape][self.rotation]
         self.group_bricks = []
+        self.start_time = pygame.time.get_ticks()
 
     def rotate_cw(self):
         rotation += 1
@@ -27,9 +28,9 @@ class TetrisBlock:
         if rotation < 0:
             rotation = 3
 
-    def move_down(self):
+    def move_down(self, multiplier=1):
         if not self.check_collision():
-            self.y += 1
+            self.y += 1*multiplier
 
     def check_collision(self):
         if self.y >= 19:
@@ -54,7 +55,8 @@ class TetrisBlock:
                     (self.draw_block(x+(e)*block_size, y+(row-1)*block_size, color, window))
     
     def update(self):
-        time.sleep(1.25)
-        self.move_down()
+        if pygame.time.get_ticks() - self.start_time > 1250:
+            self.move_down()
+            self.start_time = pygame.time.get_ticks()
     
     

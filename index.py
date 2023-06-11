@@ -45,7 +45,7 @@ class Tetris:
         elif key[pygame.K_UP]:
             self.current_block.rotate_cw()
         elif key[pygame.K_DOWN]:
-            self.current_block.move_down()
+            self.current_block.move_down(.5)
 
     def run(self):
         running = True
