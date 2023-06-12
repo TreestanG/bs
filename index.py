@@ -45,7 +45,7 @@ class Tetris:
         elif key[pygame.K_UP]:
             self.current_block.rotate_cw()
         elif key[pygame.K_DOWN]:
-            self.current_block.move_down(.5)
+            self.current_block.move_down()
 
     def run(self):
         running = True
@@ -64,6 +64,8 @@ class Tetris:
             )
             self.current_block.update()
             self.handle_input()
+            if self.current_block.new_block:
+                self.current_block = TetrisBlock(5, 1, self.shape())
             pygame.display.flip()
             pygame.display.update()
             clock.tick(60)
