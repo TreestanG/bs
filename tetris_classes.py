@@ -1,6 +1,5 @@
 import pygame
 from definitions import *
-import time
 
 class tetris_piece:
     def __init__(self, x, y):
@@ -12,45 +11,55 @@ class TetrisBlock:
     def __init__(self, x, y, shape):
         self.x = x
         self.y = y
+        self.shape = shape
         self.color = shape_colors[shape]
         self.rotation = 0
         self.code = shapes[shape][self.rotation]
         self.group_bricks = []
         self.start_time = pygame.time.get_ticks()
         self.new_block = False
+        self.reached_bottom = False
 
     def rotate_cw(self):
-        rotation += 1
-        if rotation > 3:
-            rotation = 0
+        self.rotation += 1
+        if self.rotation > 3:
+            self.rotation = 0
+        self.code = shapes[self.shape][self.rotation]
 
     def rotate_ccw(self):
-        rotation -= 1
-        if rotation < 0:
-            rotation = 3
+        self.rotation -= 1
+        if self.rotation < 0:
+            self.rotation = 3
+        self.code = shapes[self.shape][self.rotation]
 
     def move_down(self):
-        if not self.check_collision():
+        print(self.check_collision(), self.reached_bottom)
+        if not self.check_collision() or not self.reached_bottom:
+            print('isnt')
             self.y += 1
-        else: 
+        elif self.reached_bottom: 
+            print('elif')
             self.new_block = True
 
     def check_collision(self):
+        check_left = dimensions[self.shape][0][self.rotation]+2
+        check_right = 10 - dimensions[self.shape][1][self.rotation]
         if self.y >= 19:
             self.y = 19
+            self.reached_bottm = True
             return True
-        elif self.x < 3:
-            self.x = 2
-        elif self.x > 8:
-            self.x = 8
+        elif self.x <= check_left:
+            return True
+        elif self.x >= check_right:
+            return True
         return False
 
     def move_left(self):
-        if not self.check_collision():
+        if (self.check_collision() and not self.reached_bottom) or not self.check_collision():
             self.x -= 1
 
     def move_right(self):
-        if not self.check_collision():
+        if (self.check_collision() and not self.reached_bottom) or not self.check_collision:
             self.x += 1
 
     def draw_block(self, x, y, color, window):
