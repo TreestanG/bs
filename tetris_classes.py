@@ -36,7 +36,6 @@ class TetrisBlock:
     def check_collision(self, direction):
         check_left = dimensions[self.shape][0][self.rotation]+2
         check_right = 10 - dimensions[self.shape][1][self.rotation]
-        print(self.x, self.y)
         if direction == "v":
             if self.y >= 19:
                 self.y = 19
@@ -47,6 +46,7 @@ class TetrisBlock:
             if self.x >= check_right:
                 return True
         elif direction == "l":
+            print(self.x, check_left)
             if self.x <= check_left:
                 return True
         return False
@@ -55,24 +55,27 @@ class TetrisBlock:
         blk_dimensions = shape_dimensions[self.shape]
         if self.rotation == 1 or self.rotation == 3:
             blk_dimensions = blk_dimensions.reverse()
-
         available_spaces = []
         
         for row in range(len(tetris_matrix)):
             for col in range(len(tetris_matrix[row])):
                 if tetris_matrix[row][col] == 0:
-                    available_spaces.append((row, col))
+                    available_spaces.append((col+1, row+1))
         for coords in self.block_coords:
-            if coords not in available_spaces:
-                if self.y <= 0:
+            future_coords = (coords[0], coords[1])
+            if not future_coords in available_spaces:
+                if self.y <= 20:
                     return True   
         return False
     
     def move_down(self):
         if not self.check_collision("v") or not self.reached_bottom:
             if self.block_collision():
-                self.reached_bottom = True
-            self.y += 1
+                for coords in self.block_coords:
+                    tetris_matrix[coords[1]-2][coords[0]-1] = list(shapes.keys()).index(self.shape)+1
+                self.new_block = True
+            else:
+                self.y += 1
         elif self.reached_bottom: 
             self.new_block = True
 
@@ -92,7 +95,7 @@ class TetrisBlock:
         for row in range(len(tetris_grid)):
             for e in range(len(tetris_grid[row])):
                 if tetris_grid[row][e] in self.code:
-                    coord = (math.floor((x+(e)*block_size)/block_size)-6, math.floor((y+(row-1)*block_size)/block_size)+1)
+                    coord = (math.floor((x+(e)*block_size)/block_size)-7, math.floor((y+(row-1)*block_size)/block_size)+2)
                     if coord not in self.block_coords:
                         self.block_coords.append(coord)
                     (self.draw_block(x+(e)*block_size, y+(row-1)*block_size, color, window))
