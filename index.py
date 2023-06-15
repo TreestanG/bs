@@ -15,6 +15,7 @@ clock = pygame.time.Clock()
 
 class Tetris:
     def __init__(self):
+        self.bag = self.create_bag()
         self.current_block = TetrisBlock(5, 1, self.shape())
         self.move_start_time = 0
 
@@ -42,20 +43,19 @@ class Tetris:
                 if tetris_matrix[row][col] != 0:
                     pygame.draw.rect(window, bricks[tetris_matrix[row][col]], (self.tetris_coords("x", col+2),
                                      self.tetris_coords("y", row), block_size, block_size))
-
+                    
+    def create_bag(self):
+        bag = random.sample(list(shapes.keys()), 7)
+        for a in random.sample(list(shapes.keys()), 7):
+            bag.append(a)
+        return bag
+    
     def shape(self):
-        bag = []
-        for shape in range(len(shapes.keys())):
-            bag.append(random.choice(list(shapes.keys())))
-            bag.append(random.choice(list(shapes.keys())))
-
-        if len(bag) > 0:
-            return bag.pop(random.choice(range(len(bag))))
+        if len(self.bag) > 0:
+            return self.bag.pop(random.choice(range(len(self.bag))))
         else:
-            for shape in range(len(shapes.keys())):
-                bag.append(random.choice(list(shapes.keys())))
-                bag.append(random.choice(list(shapes.keys())))
-            return bag.pop(random.choice(range(len(bag))))
+            self.bag = self.create_bag()
+            return self.bag.pop(random.choice(range(len(self.bag))))
 
     def block_fits(self):
         available_spaces = []
@@ -112,6 +112,12 @@ class Tetris:
             if not (0 in row):
                 tetris_matrix.pop(tetris_matrix.index(row))
                 tetris_matrix.insert(0, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+    def check_game_over(self):
+        for coords in self.current_block.block_coords:
+            upd_coords = coords[1]-1
+            if upd_coords <= 0:
+                pygame.quit()
 
     def run(self):
         running = True

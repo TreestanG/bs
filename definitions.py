@@ -49,7 +49,7 @@ shape_dimensions = {
 }
 
 dimensions = {
-    "I":[[0, 0, 0, 1], [2, 1, 2, 3]], # Distance away from border
+    "I":[[0, -2, 0, 1], [2, 1, 2, 0]], # Distance away from border
     "O":[[-1, -1, -1, -1], [1,1,1,1]],
     "T":[[0, -1, 0, 0], [1, 1, 1, 0]],
     "L":[[-1, 0, 0, 0], [1, 1, 0, 1]],
