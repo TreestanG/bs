@@ -68,15 +68,23 @@ class TetrisBlock:
                     return True   
         return False
     
+    def write_block(self):
+        for coords in self.block_coords:
+            tetris_matrix[coords[1]-2][coords[0]-1] = list(shapes.keys()).index(self.shape)+1
+    
     def move_down(self):
         if not self.check_collision("v") or not self.reached_bottom:
             if self.block_collision():
-                for coords in self.block_coords:
-                    tetris_matrix[coords[1]-2][coords[0]-1] = list(shapes.keys()).index(self.shape)+1
+                self.write_block()
                 self.new_block = True
             else:
+                for a in range(len(self.block_coords)):
+                    self.block_coords[a] = (self.block_coords[a][0], self.block_coords[a][1]+1)
+
+
                 self.y += 1
         elif self.reached_bottom: 
+            self.write_block()
             self.new_block = True
 
     def move_left(self):

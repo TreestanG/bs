@@ -35,7 +35,7 @@ class Tetris:
             return 250 + (number-2)*block_size
         elif label == "y":
             return (number)*block_size
-        
+
     def draw_past_blocks(self):
         for row in range(len(tetris_matrix)):
             for col in range(len(tetris_matrix[row])):
@@ -43,13 +43,12 @@ class Tetris:
                     pygame.draw.rect(window, bricks[tetris_matrix[row][col]], (self.tetris_coords("x", col+2),
                                      self.tetris_coords("y", row), block_size, block_size))
 
-
     def shape(self):
         bag = []
         for shape in range(len(shapes.keys())):
             bag.append(random.choice(list(shapes.keys())))
             bag.append(random.choice(list(shapes.keys())))
-        
+
         if len(bag) > 0:
             return bag.pop(random.choice(range(len(bag))))
         else:
@@ -58,10 +57,31 @@ class Tetris:
                 bag.append(random.choice(list(shapes.keys())))
             return bag.pop(random.choice(range(len(bag))))
 
+    def block_fits(self):
+        available_spaces = []
+
+        for row in range(len(tetris_matrix)):
+            for col in range(len(tetris_matrix[row])):
+                if tetris_matrix[row][col] == 0:
+                    available_spaces.append((col+1, row+1))
+
+        for coord in self.current_block.block_coords:
+            if not (coord[0], coord[1]+1) in available_spaces:
+                return False
+        return True
+
     def handle_input(self, event):
 
         if event.type == KEYDOWN:
-            self.move_start_time = pygame.time.get_ticks()            
+            self.move_start_time = pygame.time.get_ticks()
+            if event.key == K_SPACE:
+                while not self.current_block.check_collision("v") and not self.current_block.block_collision():
+                    self.current_block.move_down()
+
+                self.current_block.write_block()
+                self.current_block.reached_bottom = True
+                self.current_block.new_block = True
+                self.move_start_time = pygame.time.get_ticks()
         elif event.type == KEYUP:
             if self.move_start_time != 0 and pygame.time.get_ticks() - self.move_start_time >= 300:
                 if event.key == K_DOWN:
@@ -76,6 +96,7 @@ class Tetris:
                     if not self.current_block.check_collision("r"):
                         self.current_block.move_right()
                     self.move_start_time = pygame.time.get_ticks()
+
             else:
                 if event.key == K_DOWN:
                     self.current_block.move_down()
@@ -85,7 +106,12 @@ class Tetris:
                     self.current_block.move_right()
             if event.key == K_UP:
                 self.current_block.rotate_cw()
-            
+    
+    def check_full_rows(self):
+        for row in tetris_matrix:
+            if not (0 in row):
+                tetris_matrix.pop(tetris_matrix.index(row))
+                tetris_matrix.insert(0, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     def run(self):
         running = True
@@ -100,6 +126,8 @@ class Tetris:
             window.fill((0, 0, 0))
             self.draw_board()
             self.draw_past_blocks()
+            self.check_full_rows()
+            self.check_game_over()
             self.current_block.draw_shape(
                 self.tetris_coords("x", self.current_block.x),  # 340
                 self.tetris_coords("y", self.current_block.y),  # 30
