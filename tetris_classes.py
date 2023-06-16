@@ -24,27 +24,61 @@ class TetrisBlock:
         self.reached_bottom = False
         self.block_coords = []
         self.game_over = False
+        self.held_block = False
+
+    
+    def create_available(self):
+        available_spaces = []
+
+        for row in range(len(tetris_matrix)):
+            for col in range(len(tetris_matrix[row])):
+                if tetris_matrix[row][col] == 0:
+                    available_spaces.append((col+1, row+1))
+        return available_spaces
+
+    def check_rotate(self):
+        spaces = self.create_available()   
+        rotated_coords = []  
+        test_rotation = self.rotation + 1
+        if test_rotation > 3:
+            test_rotation = 0  
+
+        for row in range(len(tetris_grid)):
+            for e in range(len(tetris_grid[row])):
+                if tetris_grid[row][e] in shapes[self.shape][test_rotation]:
+                    coord = ((self.x+e-1),
+                                 (self.y+row-1))
+                    rotated_coords.append(coord)
+        for a in rotated_coords:
+            if not a in spaces:
+                return False
+        return True
 
     def rotate_cw(self):
-        self.rotation += 1
-        if self.rotation > 3:
-            self.rotation = 0
-        self.code = shapes[self.shape][self.rotation]
+        if self.check_rotate():
+            self.rotation += 1
+            if self.rotation > 3:
+                self.rotation = 0
+            self.code = shapes[self.shape][self.rotation]
 
     def rotate_ccw(self):
-        self.rotation -= 1
-        if self.rotation < 0:
-            self.rotation = 3
-        self.code = shapes[self.shape][self.rotation]
+        if self.check_rotate():
+            self.rotation -= 1
+            if self.rotation < 0:
+                self.rotation = 3
+            self.code = shapes[self.shape][self.rotation]
 
     def check_collision(self, direction):
         check_left = dimensions[self.shape][0][self.rotation]+2
         check_right = 10 - dimensions[self.shape][1][self.rotation]
         if direction == "v":
             if self.y >= 19:
-                self.y = 19
-                self.reached_bottom = True
-
+                if self.shape != "I":
+                    self.y = 19
+                    self.reached_bottom = True
+                else:
+                    self.y = 20
+                    self.reached_bottom = True
                 return True
         elif direction == "r":
             if self.x >= check_right:
@@ -58,16 +92,11 @@ class TetrisBlock:
         blk_dimensions = shape_dimensions[self.shape]
         if self.rotation == 1 or self.rotation == 3:
             blk_dimensions = blk_dimensions.reverse()
-        available_spaces = []
-
-        for row in range(len(tetris_matrix)):
-            for col in range(len(tetris_matrix[row])):
-                if tetris_matrix[row][col] == 0:
-                    available_spaces.append((col+1, row+1))
+        spaces = self.create_available()
 
         for coords in self.block_coords:
             future_coords = (coords[0], coords[1])
-            if not future_coords in available_spaces:
+            if not future_coords in spaces:
                 if self.y <= 20:
                     return True
         return False
@@ -102,11 +131,27 @@ class TetrisBlock:
 
     def move_left(self):
         if not self.check_collision("l"):
-            self.x -= 1
+            if self.block_collision():
+                self.write_block()
+                self.new_block = True
+            else:
+                for a in range(len(self.block_coords)):
+                    self.block_coords[a] = (
+                        self.block_coords[a][0]-1, self.block_coords[a][1])
+
+                self.x -= 1
 
     def move_right(self):
         if not self.check_collision("r"):
-            self.x += 1
+            if self.block_collision():
+                self.write_block()
+                self.new_block = True
+            else:
+                for a in range(len(self.block_coords)):
+                    self.block_coords[a] = (
+                        self.block_coords[a][0]+1, self.block_coords[a][1])
+
+                self.x += 1
 
     def draw_block(self, x, y, color, window):
         return pygame.draw.rect(window, color, tetris_piece(x, y))
