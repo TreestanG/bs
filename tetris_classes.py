@@ -120,12 +120,13 @@ class TetrisBlock:
         self.draw_shape(
             x, 0+(-change-shape_dimensions[self.shape][1])*block_size)
 
-    def draw_shape(self, x, y, color, window):
+    def draw_shape(self, x, y, color, window, code = False):
+        code = code or self.code
         self.block_coords = []
         if not self.game_over:
             for row in range(len(tetris_grid)):
                 for e in range(len(tetris_grid[row])):
-                    if tetris_grid[row][e] in self.code:
+                    if tetris_grid[row][e] in code:
                         coord = (math.floor((x+(e)*block_size)/block_size)-7,
                                  math.floor((y+(row-1)*block_size)/block_size)+2)
                         self.draw_block(x+(e)*block_size, y+(row-1)

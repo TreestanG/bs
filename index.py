@@ -13,7 +13,6 @@ pygame.display.set_caption("Tetris - lol")
 clock = pygame.time.Clock()
 game_font = pygame.freetype.Font("Tetris.ttf", 96)
 
-
 class Tetris:
     def __init__(self):
         self.bag = self.create_bag()
@@ -53,10 +52,21 @@ class Tetris:
     
     def shape(self):
         if len(self.bag) > 0:
-            return self.bag.pop(random.choice(range(len(self.bag))))
+            return self.bag.pop(0)
         else:
             self.bag = self.create_bag()
-            return self.bag.pop(random.choice(range(len(self.bag))))
+            return self.bag.pop(0)
+    
+    def draw_next_blocks(self):
+        for i in self.bag[0:3]:
+            ind = self.bag.index(i)
+            self.current_block.draw_shape(
+                self.tetris_coords("x", 13), 
+                self.tetris_coords("y", 3+ind*4), 
+                shape_colors[self.bag[ind]], 
+                window,
+                shapes[i][0]
+            )
 
     def block_fits(self):
         available_spaces = []
@@ -124,11 +134,12 @@ class Tetris:
             window.fill((0, 0, 0))
             self.draw_board()
             self.draw_past_blocks()
+            self.draw_next_blocks()
             self.check_full_rows()
             self.current_block.draw_shape(
                 self.tetris_coords("x", self.current_block.x),  # 340
                 self.tetris_coords("y", self.current_block.y),  # 30
-                self.current_block.color, window
+                self.current_block.color, window,
             )
             self.check_game_over()
             self.current_block.update(1250)
