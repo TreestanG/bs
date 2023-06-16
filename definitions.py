@@ -19,7 +19,6 @@ shape_colors = {
 }
 
 block_size = 30
-shape_size = 4
 
 tetris_grid = [
     [1,2,3,4],

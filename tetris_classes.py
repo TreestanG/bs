@@ -23,6 +23,7 @@ class TetrisBlock:
         self.new_block = False
         self.reached_bottom = False
         self.block_coords = []
+        self.game_over = False
 
     def rotate_cw(self):
         self.rotation += 1
@@ -63,13 +64,21 @@ class TetrisBlock:
             for col in range(len(tetris_matrix[row])):
                 if tetris_matrix[row][col] == 0:
                     available_spaces.append((col+1, row+1))
-        
+
         for coords in self.block_coords:
             future_coords = (coords[0], coords[1])
             if not future_coords in available_spaces:
                 if self.y <= 20:
                     return True
         return False
+
+    def hard_drop(self):
+        while not self.check_collision("v") and not self.block_collision():
+            self.move_down()
+
+        self.write_block()
+        self.reached_bottom = True
+        self.new_block = True
 
     def write_block(self):
         for coords in self.block_coords:
@@ -108,23 +117,30 @@ class TetrisBlock:
             change = 2
         if self.shape == "I":
             change = 0
-        self.draw_shape(x, 0+(-change-shape_dimensions[self.shape][1])*block_size)
-        
+        self.draw_shape(
+            x, 0+(-change-shape_dimensions[self.shape][1])*block_size)
 
     def draw_shape(self, x, y, color, window):
         self.block_coords = []
-        for row in range(len(tetris_grid)):
-            for e in range(len(tetris_grid[row])):
-                if tetris_grid[row][e] in self.code:
-                    coord = (math.floor((x+(e)*block_size)/block_size)-7,
-                             math.floor((y+(row-1)*block_size)/block_size)+2)
-                    if coord not in self.block_coords:
-                        self.block_coords.append(coord)
+        if not self.game_over:
+            for row in range(len(tetris_grid)):
+                for e in range(len(tetris_grid[row])):
+                    if tetris_grid[row][e] in self.code:
+                        coord = (math.floor((x+(e)*block_size)/block_size)-7,
+                                 math.floor((y+(row-1)*block_size)/block_size)+2)
+                        self.draw_block(x+(e)*block_size, y+(row-1)
+                                        * block_size, color, window)
+                        if coord not in self.block_coords:
+                            self.block_coords.append(coord)
+                        if tetris_matrix[self.block_coords[0][1]-2][5] != 0:
+                            self.game_over = True
 
-                    (self.draw_block(x+(e)*block_size,
-                     y+(row-1)*block_size, color, window))
-
-    def update(self):
-        if pygame.time.get_ticks() - self.start_time > 1250:
-            self.move_down()
+    def update(self, time, direction="d"):
+        if pygame.time.get_ticks() - self.start_time > time and not self.game_over:
+            if direction == "d":
+                self.move_down()
+            elif direction == "r":
+                self.move_right()
+            elif direction == "l":
+                self.move_left()
             self.start_time = pygame.time.get_ticks()

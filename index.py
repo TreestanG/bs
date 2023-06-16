@@ -1,4 +1,4 @@
-import pygame
+import pygame, pygame.freetype
 import time
 import random
 from pygame.locals import *
@@ -6,11 +6,12 @@ from definitions import *
 from tetris_classes import *
 
 pygame.init()
-window_width = 800
+window_width = 900
 window_height = 600
 window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Tetris - lol")
 clock = pygame.time.Clock()
+game_font = pygame.freetype.Font("Tetris.ttf", 96)
 
 
 class Tetris:
@@ -72,40 +73,32 @@ class Tetris:
 
     def handle_input(self, event):
 
-        if event.type == KEYDOWN:
-            self.move_start_time = pygame.time.get_ticks()
-            if event.key == K_SPACE:
-                while not self.current_block.check_collision("v") and not self.current_block.block_collision():
-                    self.current_block.move_down()
+        keys = pygame.key.get_pressed()
+        self.move_start_time = pygame.time.get_ticks()
 
-                self.current_block.write_block()
-                self.current_block.reached_bottom = True
-                self.current_block.new_block = True
-                self.move_start_time = pygame.time.get_ticks()
-        elif event.type == KEYUP:
-            if self.move_start_time != 0 and pygame.time.get_ticks() - self.move_start_time >= 300:
-                if event.key == K_DOWN:
-                    if not self.current_block.check_collision("v"):
-                        self.current_block.move_down()
-                    self.move_start_time = pygame.time.get_ticks()
-                if event.key == K_LEFT:
-                    if not self.current_block.check_collision("l"):
-                        self.current_block.move_left()
-                    self.move_start_time = pygame.time.get_ticks()
-                if event.key == K_RIGHT:
-                    if not self.current_block.check_collision("r"):
-                        self.current_block.move_right()
-                    self.move_start_time = pygame.time.get_ticks()
-
-            else:
-                if event.key == K_DOWN:
-                    self.current_block.move_down()
+        while not pygame.time.get_ticks() - self.move_start_time < 300:
+            if keys[K_LEFT]:
+                self.current_block.move_left()
+            if keys[K_RIGHT]:
+                self.current_block.move_right()
+            if keys[K_DOWN]:
+                self.current_block.move_down()
+            if keys[K_UP]:
+                self.current_block.rotate()
+            if keys[K_SPACE]:
+                self.current_block.hard_drop()
+        else:
+            if event.type == KEYDOWN:
                 if event.key == K_LEFT:
                     self.current_block.move_left()
                 if event.key == K_RIGHT:
                     self.current_block.move_right()
-            if event.key == K_UP:
-                self.current_block.rotate_cw()
+                if event.key == K_DOWN:
+                    self.current_block.move_down()
+                if event.key == K_UP:
+                    self.current_block.rotate_cw()
+                if event.key == K_SPACE:
+                    self.current_block.hard_drop()
     
     def check_full_rows(self):
         for row in tetris_matrix:
@@ -114,16 +107,15 @@ class Tetris:
                 tetris_matrix.insert(0, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     def check_game_over(self):
-        for coords in self.current_block.block_coords:
-            upd_coords = coords[1]-1
-            if upd_coords <= 0:
-                pygame.quit()
+        if self.current_block.game_over:
+            game_font.render_to(window, (100, 200), "GAME OVER", (255, 255, 255))
+            pygame.display.flip()
+            tetris_matrix = [[0 for i in range(10)] for j in range(20)]
 
     def run(self):
         running = True
 
         while running:
-
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
@@ -133,13 +125,13 @@ class Tetris:
             self.draw_board()
             self.draw_past_blocks()
             self.check_full_rows()
-            self.check_game_over()
             self.current_block.draw_shape(
                 self.tetris_coords("x", self.current_block.x),  # 340
                 self.tetris_coords("y", self.current_block.y),  # 30
                 self.current_block.color, window
             )
-            self.current_block.update()
+            self.check_game_over()
+            self.current_block.update(1250)
             if self.current_block.new_block:
                 self.current_block = TetrisBlock(5, 1, self.shape())
             pygame.display.flip()
