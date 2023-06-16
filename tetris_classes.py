@@ -28,7 +28,7 @@ class TetrisBlock:
 
     
     def create_available(self):
-        available_spaces = []
+        available_spaces = [(x, 0) for x in range(10)]
 
         for row in range(len(tetris_matrix)):
             for col in range(len(tetris_matrix[row])):
@@ -49,6 +49,7 @@ class TetrisBlock:
                     coord = ((self.x+e-1),
                                  (self.y+row-1))
                     rotated_coords.append(coord)
+
         for a in rotated_coords:
             if not a in spaces:
                 return False
@@ -178,8 +179,6 @@ class TetrisBlock:
                                         * block_size, color, window)
                         if coord not in self.block_coords:
                             self.block_coords.append(coord)
-                        if tetris_matrix[self.block_coords[0][1]-2][5] != 0:
-                            self.game_over = True
 
     def update(self, time, direction="d"):
         if pygame.time.get_ticks() - self.start_time > time and not self.game_over:
