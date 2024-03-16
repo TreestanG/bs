@@ -21,16 +21,15 @@ class Tetris:
         self.current_block = TetrisBlock(5, 1, self.shape())
         self.move_start_time = 0
         self.held_block = False
+        self.previous_held = []
 
     def draw_board(self):
         window.fill(BLACK)
         windowDimensions = {"x": block_size*10, "y": block_size*20}
-        pygame.draw.rect(window, (41, 44, 53), (250, 0,
-                         windowDimensions["x"], windowDimensions["y"]))
+        pygame.draw.rect(window, (41, 44, 53), (250, 0, windowDimensions["x"], windowDimensions["y"]))
 
         for i in range(250, 550, block_size):
-            pygame.draw.line(window, (75, 75, 75), (i, 0),
-                             (i, windowDimensions["y"]), 1)
+            pygame.draw.line(window, (75, 75, 75), (i, 0), (i, windowDimensions["y"]), 1)
         for y in range(0, 600, block_size):
             pygame.draw.line(window, (75, 75, 75), (250, y), (550, y), 1)
 
@@ -44,8 +43,7 @@ class Tetris:
         for row in range(len(tetris_matrix)):
             for col in range(len(tetris_matrix[row])):
                 if tetris_matrix[row][col] != 0:
-                    pygame.draw.rect(window, bricks[tetris_matrix[row][col]], (self.tetris_coords("x", col+2),
-                                     self.tetris_coords("y", row), block_size, block_size))
+                    pygame.draw.rect(window, bricks[tetris_matrix[row][col]], (self.tetris_coords("x", col+2), self.tetris_coords("y", row), block_size, block_size))
                     
     def create_bag(self):
         bag = random.sample(list(shapes.keys()), 7)
@@ -111,10 +109,15 @@ class Tetris:
                     if not self.held_block:
                         self.held_block = TetrisBlock(5, 1, self.current_block.shape)
                         self.current_block = TetrisBlock(5,1, self.shape())
+
                     else:
-                        held = self.current_block
-                        self.current_block = self.held_block
-                        self.held_block = held
+                        if not self.current_block in self.previous_held:
+                            held = self.current_block
+
+                            self.current_block = self.held_block
+                            self.held_block = held
+                            self.previous_held.append(held)
+
             if event.type == MOUSEBUTTONDOWN and self.current_block.game_over:
                 self.__init__()
                 tetris_matrix = [[0 for i in range(10)] for j in range(20)]
@@ -139,12 +142,12 @@ class Tetris:
                 tetris_matrix.insert(0, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     
     def draw_text(self):
-        game_font.render_to(window, (100, 90), "Hold", (255, 255, 255))
-        game_font.render_to(window, (575, 20), "Next", (255, 255, 255))
-
+        game_font.render_to(window, (100, 90), "H o l d", (255, 255, 255))
+        game_font.render_to(window, (575, 20), "N e x t", (255, 255, 255))
 
     def check_game_over(self):
         if self.current_block.game_over:
+            self.previous_held = []
             game_over_font.render_to(window, (100, 200), "GAME OVER", (255, 255, 255))
             pygame.display.flip()
 
